@@ -1058,6 +1058,7 @@ func runproc(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg 
 			}()
 			return
 		}
+		alog.Printf("%v", err)
 		goto Fail
 	}
 
