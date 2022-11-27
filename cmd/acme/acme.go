@@ -77,7 +77,10 @@ func main() {
 
 	cputype = os.Getenv("cputype")
 	ui.Objtype = os.Getenv("objtype")
-	home = os.Getenv("HOME")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 	dumppkg.Home = home
 	exec.Acmeshell = os.Getenv("acmeshell")
 	p := os.Getenv("tabstop")
