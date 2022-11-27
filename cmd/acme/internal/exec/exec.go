@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -313,7 +314,7 @@ func getname(t *wind.Text, argt *wind.Text, arg []rune, isput bool) string {
 		// best guess is that file name doesn't contain a slash
 		promote = true
 		for i := 0; i < len(r); i++ {
-			if r[i] == '/' {
+			if r[i] == filepath.Separator {
 				promote = false
 				break
 			}
@@ -330,7 +331,7 @@ func getname(t *wind.Text, argt *wind.Text, arg []rune, isput bool) string {
 		var dir []rune
 		// prefix with directory name if necessary
 		dir = nil
-		if len(arg) > 0 && arg[0] != '/' {
+		if len(arg) > 0 && !filepath.IsAbs(string(arg)) {
 			dir = wind.Dirname(t, nil)
 			if len(dir) == 1 && dir[0] == '.' { // sigh
 				dir = nil
@@ -339,8 +340,8 @@ func getname(t *wind.Text, argt *wind.Text, arg []rune, isput bool) string {
 		if dir != nil {
 			r = make([]rune, len(dir)+1+len(arg))
 			r = append(r, dir...)
-			if len(r) > 0 && r[len(r)-1] != '/' && len(arg) > 0 && arg[0] != '/' {
-				r = append(r, '/')
+			if len(r) > 0 && r[len(r)-1] != filepath.Separator && len(arg) > 0 && !filepath.IsAbs(string(arg)) {
+				r = append(r, filepath.Separator)
 			}
 			r = append(r, arg...)
 		} else {

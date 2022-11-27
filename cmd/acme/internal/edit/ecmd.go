@@ -18,6 +18,7 @@ package edit
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"9fans.net/go/cmd/acme/internal/alog"
@@ -227,12 +228,12 @@ func D_cmd(t *wind.Text, cp *Cmd) bool {
 		r = r[:len(r)-len(s)]
 		var rs []rune
 		// first time through, could be empty string, meaning delete file empty name
-		if len(r) == 0 || r[0] == '/' || len(dir) == 0 {
+		if len(r) == 0 || filepath.IsAbs(string(r)) || len(dir) == 0 {
 			rs = runes.Clone(r)
 		} else {
 			n := make([]rune, len(dir)+1+len(r))
 			copy(n, dir)
-			n[len(dir)] = '/'
+			n[len(dir)] = filepath.Separator
 			copy(n[len(dir)+1:], r)
 			rs = runes.CleanPath(n)
 		}
@@ -1279,7 +1280,7 @@ func cmdname(f *wind.File, str *String, set bool) []rune {
 	s = runes.SkipBlank(s)
 	var r []rune
 	if len(s) > 0 {
-		if s[0] == '/' {
+		if filepath.IsAbs(string(s)) {
 			r = runes.Clone(s)
 		} else {
 			newname := wind.Dirname(f.Curtext, runes.Clone(s))

@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
+	"unicode"
 
 	"9fans.net/go/cmd/acme/internal/addr"
 	"9fans.net/go/cmd/acme/internal/adraw"
@@ -397,6 +400,8 @@ func expandfile(t *wind.Text, q0 int, q1 int, e *Expand) bool {
 		if c == ':' && nname < 0 {
 			if q0+i+1 < t.Len() && (i == n-1 || runes.IsAddr(t.RuneAt(q0+i+1))) {
 				amin = q0 + i
+			} else if q0+i+1 < t.Len() && i == 1 && unicode.IsLetter(t.RuneAt(q0+i-1)) && strings.ContainsRune("\\", t.RuneAt(q0+i+1)) {
+				continue // windows path
 			} else {
 				return false
 			}
@@ -486,15 +491,15 @@ func Expand_(t *wind.Text, q0 int, q1 int, e *Expand) bool {
 }
 
 func LookFile(s []rune) *wind.Window {
-	// avoid terminal slash on directories
-	if len(s) > 0 && s[len(s)-1] == '/' {
+	// avoid terminal path separator on directories
+	if len(s) > 0 && os.IsPathSeparator(byte(s[len(s)-1])) {
 		s = s[:len(s)-1]
 	}
 	for _, c := range wind.TheRow.Col {
 		for _, w := range c.W {
 			t := &w.Body
 			k := len(t.File.Name())
-			if k > 1 && t.File.Name()[k-1] == '/' {
+			if k > 1 && os.IsPathSeparator(byte(t.File.Name()[k-1])) {
 				k--
 			}
 			if runes.Equal(t.File.Name()[:k], s) {
@@ -559,7 +564,7 @@ func Openfile(t *wind.Text, e *Expand) *wind.Window {
 		}
 	} else {
 		w = LookFile(e.Name)
-		if w == nil && e.Name[0] != '/' {
+		if w == nil && !filepath.IsAbs(string(e.Name)) {
 			/*
 			 * Unrooted path in new window.
 			 * This can happen if we type a pwd-relative path
@@ -570,7 +575,7 @@ func Openfile(t *wind.Text, e *Expand) *wind.Window {
 			 * Make the name a full path, just like we would if
 			 * opening via the plumber.
 			 */
-			rs := []rune(path.Join(string(Wdir), string(e.Name)))
+			rs := []rune(filepath.Join(string(Wdir), string(e.Name)))
 			e.Name = rs
 			w = LookFile(e.Name)
 		}

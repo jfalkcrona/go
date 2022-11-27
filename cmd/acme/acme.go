@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -233,8 +234,8 @@ func main() {
 func readfile(c *wind.Column, s string) {
 	w := ui.ColaddAndMouse(c, nil, nil, -1)
 	var rb []rune
-	if !strings.HasPrefix(s, "/") {
-		rb = []rune(ui.Wdir + "/" + s)
+	if !filepath.IsAbs(s) {
+		rb = []rune(ui.Wdir + string(filepath.Separator) + s)
 	} else {
 		rb = []rune(s)
 	}
@@ -767,7 +768,7 @@ func ismtpt(file string) bool {
 	}
 
 	// This is not foolproof, but it will stop a lot of them.
-	return strings.HasPrefix(file, mtpt) && (len(file) == len(mtpt) || file[len(mtpt)] == '/')
+	return strings.HasPrefix(file, mtpt) && (len(file) == len(mtpt) || file[len(mtpt)] == filepath.Separator)
 }
 
 // big is big lock, meant to model the cooperative scheduling in Alef.

@@ -20,6 +20,7 @@ import (
 	"hash"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"9fans.net/go/cmd/acme/internal/alog"
@@ -69,10 +70,10 @@ func Textload(t *wind.Text, q0 int, file string, setqid bool) int {
 		}
 		t.W.IsDir = true
 		t.W.Filemenu = false
-		if len(t.File.Name()) > 0 && t.File.Name()[len(t.File.Name())-1] != '/' {
+		if len(t.File.Name()) > 0 && t.File.Name()[len(t.File.Name())-1] != filepath.Separator {
 			rp := make([]rune, len(t.File.Name())+1)
 			copy(rp, t.File.Name())
-			rp[len(t.File.Name())] = '/'
+			rp[len(t.File.Name())] = filepath.Separator
 			wind.Winsetname(t.W, rp)
 		}
 		var dlp []*wind.Dirlist
@@ -84,7 +85,7 @@ func Textload(t *wind.Text, q0 int, file string, setqid bool) int {
 				dl := new(wind.Dirlist)
 				name := dir.Name()
 				if dir.IsDir() {
-					name += "/"
+					name += string(filepath.Separator)
 				}
 				dl.R = []rune(name)
 				dl.Wid = t.Fr.Font.StringWidth(name)
@@ -170,14 +171,14 @@ func Textcomplete(t *wind.Text) []rune {
 	}
 	var dir []rune
 	// is path rooted? if not, we need to make it relative to window path
-	if npath > 0 && path_[0] == '/' {
+	if npath > 0 && filepath.IsAbs(string(path_)) {
 		dir = path_
 	} else {
 		dir = wind.Dirname(t, nil)
 		if len(dir) == 0 {
 			dir = []rune{'.'}
 		}
-		dir = append(dir, '/')
+		dir = append(dir, filepath.Separator)
 		dir = append(dir, path_...)
 		dir = runes.CleanPath(dir)
 	}
@@ -190,8 +191,8 @@ func Textcomplete(t *wind.Text) []rune {
 
 	if !c.Progress {
 		sep := ""
-		if len(dir) > 0 && dir[len(dir)-1] != '/' {
-			sep = "/"
+		if len(dir) > 0 && dir[len(dir)-1] != filepath.Separator {
+			sep = string(filepath.Separator)
 		}
 		more := ""
 		if c.NumMatch == 0 {

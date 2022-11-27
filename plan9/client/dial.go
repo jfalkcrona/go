@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -18,7 +19,7 @@ func Dial(network, addr string) (*Conn, error) {
 
 func DialService(service string) (*Conn, error) {
 	ns := Namespace()
-	return Dial("unix", ns+"/"+service)
+	return Dial("unix", ns+string(filepath.Separator)+service)
 }
 
 func Mount(network, addr string) (*Fsys, error) {

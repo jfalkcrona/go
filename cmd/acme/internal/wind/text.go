@@ -3,6 +3,7 @@ package wind
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"9fans.net/go/cmd/acme/internal/adraw"
 	"9fans.net/go/cmd/acme/internal/bufs"
@@ -984,21 +985,21 @@ func Dirname(t *Text, r []rune) []rune {
 		if nt == 0 {
 			goto Rescue
 		}
-		if len(r) >= 1 && r[0] == '/' {
+		if len(r) >= 1 && filepath.IsAbs(string(r)) {
 			goto Rescue
 		}
 		b, i := parsetag(t.W, len(r))
-		slash := -1
+		separator := -1
 		for i--; i >= 0; i-- {
-			if b[i] == '/' {
-				slash = i
+			if b[i] == filepath.Separator {
+				separator = i
 				break
 			}
 		}
-		if slash < 0 {
+		if separator < 0 {
 			goto Rescue
 		}
-		b = append(b[:slash+1], r...)
+		b = append(b[:separator+1], r...)
 		return runes.CleanPath(b)
 	}
 

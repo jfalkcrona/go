@@ -3,7 +3,7 @@ package wind
 import (
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 	"sync"
 	"unsafe"
 
@@ -569,7 +569,7 @@ func Winaddincl(w *Window, r []rune) {
 	a := string(r)
 	info, err := os.Stat(a)
 	if err != nil {
-		if !strings.HasPrefix(a, "/") {
+		if !filepath.IsAbs(string(r)) {
 			rs := Dirname(&w.Body, r)
 			r = rs
 			a = string(r)
