@@ -935,6 +935,7 @@ func runproc(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg 
 	c.IsEditCmd = iseditcmd
 	c.text = s
 	var sfd [3]*os.File
+	closech := make(chan struct{})
 	if newns {
 		var incl [][]rune
 		var winid int
@@ -971,7 +972,7 @@ func runproc(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg 
 			return // TODO(rsc): goto Fail?
 		}
 		if winid > 0 && (pipechar == '|' || pipechar == '>') {
-			sfd[0], _ = fsopenfd(fs, fmt.Sprintf("%d/rdsel", winid), plan9.OREAD)
+			sfd[0], _ = fsopenfd(fs, fmt.Sprintf("%d/rdsel", winid), plan9.OREAD, closech)
 		} else {
 			sfd[0], _ = os.Open(os.DevNull)
 		}
@@ -986,10 +987,10 @@ func runproc(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg 
 			} else {
 				buf = fmt.Sprintf("%d/wrsel", winid)
 			}
-			sfd[1], _ = fsopenfd(fs, buf, plan9.OWRITE)
-			sfd[2], _ = fsopenfd(fs, "cons", plan9.OWRITE)
+			sfd[1], _ = fsopenfd(fs, buf, plan9.OWRITE, closech)
+			sfd[2], _ = fsopenfd(fs, "cons", plan9.OWRITE, closech)
 		} else {
-			sfd[1], _ = fsopenfd(fs, "cons", plan9.OWRITE)
+			sfd[1], _ = fsopenfd(fs, "cons", plan9.OWRITE, closech)
 			sfd[2] = sfd[1]
 		}
 		// fsunmount(fs) // TODO(rsc): implement
@@ -1006,6 +1007,7 @@ func runproc(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg 
 	defer sfd[0].Close()
 	defer sfd[1].Close()
 	defer sfd[2].Close()
+	defer close(closech)
 
 	if argaddr != nil {
 		os.Setenv("acmeaddr", *argaddr) // TODO(rsc)
@@ -1121,7 +1123,7 @@ func Run(win *wind.Window, s string, rdir []rune, newns bool, argaddr, xarg *str
 	go runwaittask(c, cproc)
 }
 
-func fsopenfd(fs *client.Fsys, name string, mode uint8) (*os.File, error) {
+func fsopenfd(fs *client.Fsys, name string, mode uint8, cleanup chan struct{}) (*os.File, error) {
 	fd, err := fs.Open(name, mode)
 	if err != nil {
 		return nil, err
@@ -1132,18 +1134,20 @@ func fsopenfd(fs *client.Fsys, name string, mode uint8) (*os.File, error) {
 		return nil, err
 	}
 	if mode == plan9.OREAD {
-		go func() {
+		go func(cleanup chan struct{}) {
 			io.Copy(w, fd)
+			<-cleanup
 			w.Close()
 			fd.Close()
-		}()
+		}(cleanup)
 		return r, nil
 	}
-	go func() {
+	go func(cleanup chan struct{}) {
 		io.Copy(fd, r)
+		<-cleanup
 		r.Close()
 		fd.Close()
-	}()
+	}(cleanup)
 	return w, nil
 }
 
