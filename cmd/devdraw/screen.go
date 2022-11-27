@@ -129,6 +129,7 @@ func (*theImpl) rpc_resizewindow(client *Client, r draw.Rectangle) {
 }
 
 func (*theImpl) rpc_setmouse(client *Client, p draw.Point) {
+	setMouse(p)
 }
 
 func (*theImpl) rpc_setcursor(client *Client, c *draw.Cursor, c2 *draw.Cursor2) {
