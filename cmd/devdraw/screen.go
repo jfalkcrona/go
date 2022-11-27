@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	godraw "image/draw"
 	"log"
-	"os"
 	"sync"
 	"time"
 
@@ -198,7 +196,6 @@ func shinyMain(s screen.Screen) {
 		case mouse.Event:
 			// TODO keyboard modifiers
 			// TODO buttons
-			fmt.Fprintf(os.Stderr, "M %T\n", e)
 			if e.Button > 0 {
 				if e.Direction == mouse.DirPress {
 					buttons |= 1 << (e.Button - 1)
@@ -288,12 +285,12 @@ var codeKeys = [...]rune{
 	// CodeMute
 	// CodeVolumeUp
 	// CodeVolumeDown
-	key.CodeLeftControl: draw.KeyCtl,
-	key.CodeLeftShift:   draw.KeyShift,
-	key.CodeLeftAlt:     draw.KeyAlt,
+	//key.CodeLeftControl: draw.KeyCtl,
+	//key.CodeLeftShift:   draw.KeyShift,
+	//key.CodeLeftAlt:     draw.KeyAlt,
 	// CodeLeftGUI
-	key.CodeRightControl: draw.KeyCtl,
-	key.CodeRightShift:   draw.KeyShift,
-	key.CodeRightAlt:     draw.KeyAlt,
+	//key.CodeRightControl: draw.KeyCtl,
+	//key.CodeRightShift:   draw.KeyShift,
+	//key.CodeRightAlt:     draw.KeyAlt,
 	// CodeRightGUI
 }
